@@ -21,13 +21,13 @@ def scan_port(ip, port):
 def validate_ip_set(raw_text):
     try:
         # split raw text list into potential ip addressses
-        delimited_ip_set = raw_text.split(',')
+        delimited_ip_set = raw_text.replace(' ', '').split(',')
         for candidate_ip in delimited_ip_set:
             # take the individual ip address and split it into an array of ints
             ip_segments = list(map(int, candidate_ip.split('.')))
 
             # invalid length or number (0 to 255)
-            if (len(ip_segments) != 4) or (max(ip_segments) > 255) or (min(ip_segments) < 1):
+            if (len(ip_segments) != 4) or (max(ip_segments) > 255) or (min(ip_segments) < 0):
                 raise ValueError(f'{OPEN_STRING} ERROR: The following IP address is invalid: {candidate_ip}\n' \
                     '\t\tPlease verify it and try again.')
     except ValueError as e:
@@ -78,8 +78,6 @@ def main():
     target_ip = input('Input target IP address(es) (not defanged, comma-separated):\t')
     raw_port_range = input('Input port range(s) (comma- and dash-separated):\t\t')
     port_ranges = parse_port_ranges(raw_port_range)
-
-    validate_ip(target_ip)
 
     # print('Ports OPEN would scan:')
     # for prange in port_ranges:
