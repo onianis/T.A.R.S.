@@ -18,10 +18,12 @@ def scan_port(ip, port):
 
 
 
-def validate_ip_set(raw_text):
+def parse_ip_set(raw_text):
     try:
-        # split raw text list into potential ip addressses
-        delimited_ip_set = raw_text.replace(' ', '').split(',')
+        # split raw text list into potential IP addressses
+        delimited_ip_set, clean_ips = raw_text.replace(' ', '').split(','), []
+
+        # process each IP
         for candidate_ip in delimited_ip_set:
             # take the individual ip address and split it into an array of ints
             ip_segments = list(map(int, candidate_ip.split('.')))
@@ -30,6 +32,10 @@ def validate_ip_set(raw_text):
             if (len(ip_segments) != 4) or (max(ip_segments) > 255) or (min(ip_segments) < 0):
                 raise ValueError(f'{OPEN_STRING} ERROR: The following IP address is invalid: {candidate_ip}\n' \
                     '\t\tPlease verify it and try again.')
+
+            clean_ips.append(candidate_ip)
+        
+        return clean_ips
     except ValueError as e:
         print(e.args[0])
         sys.exit(-1)
@@ -37,7 +43,7 @@ def validate_ip_set(raw_text):
         print(f'{OPEN_STRING} ERROR: An exception occured when parsing the provided target IP input.\n' \
               '\t\tPlease double-check your input for any inconsistencies or formatting errors.\n' \
               '\t\tRemember that the target IPs should not be defanged and they should be comma-separated')
-        sys.exit(-1)
+        sys.exit(-1) 
 
 
 def parse_port_ranges(raw_text):
@@ -48,7 +54,7 @@ def parse_port_ranges(raw_text):
             if ('-' in port_range):
                 dash_idx = port_range.index('-')
                 # chop up the provided string according to the location of the dash
-                unsorted_range = (int(port_range[:dash_idx]), int(port_range[dash_idx+1:]))
+                unsorted_range = (int(port_range[:dash_idx]), int(port_range[dash_idx + 1:]))
                 # sort the tuple as it is being inserted into the list
                 clean_ranges.append((min(unsorted_range), max(unsorted_range)))
             else:
@@ -75,9 +81,15 @@ def parse_port_ranges(raw_text):
 
 
 def main():
-    target_ip = input('Input target IP address(es) (not defanged, comma-separated):\t')
-    raw_port_range = input('Input port range(s) (comma- and dash-separated):\t\t')
-    port_ranges = parse_port_ranges(raw_port_range)
+    raw_target_ips = input('Input target IP address(es) (not defanged, comma-separated):\t')
+    raw_port_ranges = input('Input port range(s) (comma- and dash-separated):\t\t')
+
+    # parse ports
+    port_ranges = parse_port_ranges(raw_port_ranges)
+
+    # parse IPs
+    target_ips = parse_ip_set(raw_target_ips)
+
 
     # print('Ports OPEN would scan:')
     # for prange in port_ranges:
