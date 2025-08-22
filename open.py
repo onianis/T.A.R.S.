@@ -1,11 +1,12 @@
 # O.P.E.N - Omnicompetent Port Emergence Norm
-import socket, sys
+import socket, sys, argparse
 
 
 
 # Global constants
 LAST_PORT = 65535
-OPEN_STRING = "[ O.P.E.N. ]"
+FIRST_PORT = 1
+OPEN_STRING = '[ O.P.E.N. ]'
 
 
 
@@ -64,9 +65,18 @@ def parse_port_ranges(raw_text):
         # check if the maximum registered port exceeds the real-world limit
         max_port = max(abs(num) for port_range in clean_ranges for num in port_range)
         if max_port > LAST_PORT:
-            raise ValueError(f'{OPEN_STRING} ERROR: The maximum port number indicated exceeds the number of actual ports.\n' \
-                             '\t\tThe applicable range is 1-65535 (inclusive).\n' \
-                             '\t\tPlease input a valid range of ports and try again.')
+            raise ValueError(f'{OPEN_STRING} ERROR: The maximum port number indicated exceeds' \
+                ' the number of actual ports.\n' \
+                '\t\tThe applicable range is 1-65535 (inclusive).\n' \
+                '\t\tPlease input a valid range of ports and try again.')
+        
+        # check the same thing for the minimum port
+        min_port = min(abs(num) for port_range in clean_ranges for num in port_range)
+        if min_port < FIRST_PORT:
+            raise ValueError(f'{OPEN_STRING} ERROR: The minimum port number indicated is less' \
+                ' than the number of the first available port.\n' \
+                '\t\tThe applicable range is 1-65535 (inclusive).\n' \
+                '\t\tPlease input a valid range of ports and try again.')
 
         return(clean_ranges)
     except ValueError as e:
@@ -81,25 +91,28 @@ def parse_port_ranges(raw_text):
 
 
 def main():
-    raw_target_ips = input('Input target IP address(es) (not defanged, comma-separated):\t')
-    raw_port_ranges = input('Input port range(s) (comma- and dash-separated):\t\t')
+    parser = argparse.ArgumentParser(description='O.P.E.N. - Omnicompetent Port Emergence Norm',
+        epilog='T.A.R.S. and O.P.E.N. are projects by Shota Oniani / lavendermerchant. © 2025')
 
-    # parse ports
-    port_ranges = parse_port_ranges(raw_port_ranges)
+    parser.add_argument('-t', '--targets', metavar='', 
+        dest='targets', help='List of IPs to scan. Delimited by commas. No spaces.')
+    parser.add_argument('-p', '--ports', metavar='', 
+        dest='ports', help='List of all port ranges to scan. Defined by dashes. Delimited by commas. No spaces.')
 
-    # parse IPs
+    args = parser.parse_args()
+
+    if (not args.targets) or (not args.ports):
+        parser.print_help()
+        sys.exit(-1)
+
+    raw_target_ips = args.targets
+    raw_port_ranges = args.ports
+
     target_ips = parse_ip_set(raw_target_ips)
+    target_ports = parse_port_ranges(raw_port_ranges)
 
 
-    # print('Ports OPEN would scan:')
-    # for prange in port_ranges:
-    #     for i in range(prange[0], prange[1] + 1):
-    #         print(i, end=', ')
-    #     print()
-
-    # res = s.connect_ex((target_ip, target_port))
-    
-    # print(f'Port {target_port} on {target_ip} is {'OPEN' if not res else 'CLOSED'}')
+    s.close()
 
 
 
