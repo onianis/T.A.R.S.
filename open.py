@@ -1,18 +1,13 @@
 # O.P.E.N - Omnicompetent Port Emergence Norm
-import socket, sys, argparse, ipaddress
+import socket, sys, argparse, ipaddress, json, os
 
 
 
 # Global constants
 LAST_PORT = 65535
 FIRST_PORT = 1
-TARGET_IP_AMOUNT_LIMIT = 1000
+TARGET_IP_LIMIT = 1000
 OPEN_STRING = '[ O.P.E.N. ]'
-
-
-
-# Global flags
-Target_ip_limit_override = False
 
 
 
@@ -21,13 +16,30 @@ s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 
 
+# load language file by locale
+def load_messages(lang="en"):
+    path = os.path.join(os.path.dirname(__file__), f"lang_{lang}.json")
+    with open(path, "r", encoding="utf-8") as f:
+        return json.load(f)
+msgs = load_messages("en")
+
+
+
 # TODO
 def scan_port(ip, port):
     pass
 
 
+# TODO NOW: FINISH IMPLEMENTING THIS FUNCTION FOR ALL EXCEPTIONS.
+def handle_error_and_terminate(message, exception):
+    print(f'{OPEN_STRING} ERROR: {message}' \
+          f'{msgs["twotab"]}{msgs["more_details_below"]}')
+    print(exception)
+    sys.exit(-1)
 
-def parse_ip_set(raw_text):
+
+
+def parse_ip_set(raw_text, target_ip_limit_override):
     try:
         # split raw text list into potential IP addressses
         delimited_set, clean_ips = raw_text.replace(' ', '').split(','), []
@@ -64,21 +76,16 @@ def parse_ip_set(raw_text):
                 clean_ips.append(candidate_address)
         
         # sanity check that kicks in when there are too many IPs in the final list
-        if len(clean_ips) > TARGET_IP_AMOUNT_LIMIT and not Target_ip_limit_override:
-            raise ValueError(f'{OPEN_STRING} WARNING: The total amount of IPs resulting from the provided ranges,\n' \
-                f'\t\t\tnetworks, and/or addresses is quite high: {len(clean_ips)}.\n' \
-                '\t\tTo allow the scanning such a high amount of IPs, you must override this restriction with the\n' \
-                '\t\t\t--enable-huge-scans\n' \
-                '\t\tcommand-line flag. Either verify the given IPs, or include the override flag in your command.')
+        if len(clean_ips) > TARGET_IP_LIMIT and not target_ip_limit_override:
+            raise ValueError(f'{msgs["open_string_brackets"]} {msgs["warning_label"]} {"".join(msgs["ip_amount_limit_warning"])}')
 
         return clean_ips
-    except Exception as e:
-        print(f'{OPEN_STRING} ERROR: An exception occured when parsing the provided target IP input.\n' \
-            '\t\tPlease double-check your input for any inconsistencies or formatting errors.\n' \
-            '\t\tRemember that the target IP(s) should not be defanged, and should be comma-separated.\n\n' \
-            '\t\tMore details about the error, from the specific module that failed, are given below:\n')
-        print(e.args[0])
-        sys.exit(-1) 
+    # addressValueError - incorrect ip formatting, >255, <1
+    except ipaddress.AddressValueError as e:
+        sys.exit(-1)
+        handle_error_and_terminate("".join(msgs["ipaddress_value_error"]), e)
+    except ValueError as e:
+        handle_error_and_terminate("".join(msgs["general_ip_parse_value_error"]), e)
 
 
 
@@ -100,42 +107,29 @@ def parse_port_ranges(raw_text):
         # check if the maximum registered port exceeds the real-world limit
         max_port = max(abs(num) for port_range in clean_ranges for num in port_range)
         if max_port > LAST_PORT:
-            raise ValueError(f'{OPEN_STRING} ERROR: The maximum port number indicated exceeds' \
-                ' the number of actual ports.\n' \
-                '\t\tThe applicable range is 1-65535 (inclusive).\n' \
-                '\t\tPlease input a valid range of ports and try again.')
+            raise ValueError(f'{msgs["open_string_brackets"]} {msgs["error_label"]} {"".join(msgs["port_range_max_error"])}')
         
         # check the same thing for the minimum port
         min_port = min(abs(num) for port_range in clean_ranges for num in port_range)
         if min_port < FIRST_PORT:
-            raise ValueError(f'{OPEN_STRING} ERROR: The minimum port number indicated is less' \
-                ' than the number of the first available port.\n' \
-                '\t\tThe applicable range is 1-65535 (inclusive).\n' \
-                '\t\tPlease input a valid range of ports and try again.')
+            raise ValueError(f'{msgs["open_string_brackets"]} {msgs["error_label"]} {"".join(msgs["port_range_min_error"])}')
 
         return(clean_ranges)
-    except Exception as e:
-        print(f'{OPEN_STRING} ERROR: An exception occured when parsing the provided port range input.\n' \
-        '\t\tPlease double-check your input for any inconsistencies or formatting errors.\n' \
-        '\t\tRemember that the port range(s) should be comprised SOLELY of numbers, commas, and dashes.\n\n' \
-        '\t\tMore details about the error, from the specific module that failed, are given below:\n')
-        print(e.args[0])
-        sys.exit(-1)
+    except (ValueError, TypeError, IndexError) as e:
+        handle_error_and_terminate("".join(msgs["general_port_range_error"]), e)
             
 
 
 def main():
-    global Target_ip_limit_override
-
-    parser = argparse.ArgumentParser(description='O.P.E.N. - Omnicompetent Port Emergence Norm',
-        epilog='T.A.R.S. and O.P.E.N. are projects by Shota Oniani / lavendermerchant. © 2025')
+    parser = argparse.ArgumentParser(description=msgs["argparse_description"],
+        epilog=msgs["argparse_epilog"])
 
     parser.add_argument('-t', '--targets', metavar='', 
-        dest='targets', help='List of IPs to scan. Delimited by commas. No spaces')
+        dest='targets', help=msgs["argparse_targets_flag_help"])
     parser.add_argument('-p', '--ports', metavar='', 
-        dest='ports', help='List of all port ranges to scan. Defined by dashes. Delimited by commas. No spaces')
+        dest='ports', help=msgs["argparse_ports_flag_help"])
     parser.add_argument('--enable-huge-scans', metavar='', action='store_const', const=True,
-        dest='enable_huge_scans', help=f'Used to override the limit for target IPs set at the program level: {TARGET_IP_AMOUNT_LIMIT}')
+        dest='enable_huge_scans', help=f'{msgs["argparse_enable_huge_scans_flag_help"]} {TARGET_IP_LIMIT}')
 
     args = parser.parse_args()
 
@@ -146,10 +140,10 @@ def main():
     raw_target_ips = args.targets
     raw_port_ranges = args.ports
     # just for cleanliness, set the flag to False instead the default None
-    Target_ip_limit_override = (args.enable_huge_scans if args.enable_huge_scans is not None else False)
+    target_ip_limit_override = bool(args.enable_huge_scans)
 
     # hand off raw input to IP and port parsers
-    target_ips = parse_ip_set(raw_target_ips)
+    target_ips = parse_ip_set(raw_target_ips, target_ip_limit_override)
     target_ports = parse_port_ranges(raw_port_ranges)
 
 

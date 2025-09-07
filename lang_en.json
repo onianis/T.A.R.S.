@@ -1,0 +1,53 @@
+{
+    "error_label": "ERROR:",
+    "warning_label": "WARNING:",
+    "open_string_brackets": "[ O.P.E.N. ]",
+    "open_string": "O.P.E.N.",
+    "twotab": "\t\t",
+    "threetab": "\t\t\t",
+    "more_details_below": "More details, as provided by the specific point of failure, are provided below:\n",
+
+    "_comment1": "----- IP PARSING ------",
+    "ipaddress_value_error": [
+        "Python's ipaddress library encountered an error when parsing the provided IPs.\n",
+        "\t\tPlease double-check your input for any formatting inconsistencies or errors.\n",
+        "\t\tRememeber that the target IP(s) should NOT be defanged, and should be comma-separated.\n\n"
+    ],
+    "general_ip_parse_value_error": [
+        "O.P.E.N. encountered an error when parsing the provided IPs.\n",
+        "\t\tPlease double-check your input for any formatting inconsistencies or errors.\n",
+        "\t\tRememeber that the target IP(s) should NOT be defanged, and should be comma-separated.\n\n"
+    ],
+    "ip_amount_limit_warning": [
+        "The total amount of IPs resulting from the provided ranges, networks, and/or addresses is quite high.\n",
+        "\t\tTo allow the scanning such a high amount of IPs, you must override this restriction with the\n",
+        "\t\t\t--enable-huge-scans\n",
+        "\t\tcommand-line flag. Either verify the given IPs, or include the override flag in your command."
+    ],
+    "_comment2": "---------------------------",
+
+    "_comment3": "----- PORT PARSING ------",
+    "port_range_max_error": [
+        "The maximum port number indicated exceeds the number of actual ports.\n",
+        "\t\tThe applicable range is 1-65535 (inclusive).\n",
+        "\t\tPlease input a valid range of ports and try again."
+    ],
+    "port_range_min_error": [
+        "The minimum port number indicated is less than the number of the first available port.\n",
+        "\t\tThe applicable range is 1-65535 (inclusive).\n",
+        "\t\tPlease input a valid range of ports and try again."
+    ],
+    "general_port_range_error": [
+        "An exception occured when parsing the provided port range input.\n",
+        "\t\tPlease double-check your input for any inconsistencies or formatting errors.\n",
+        "\t\tRemember that the port range(s) should be comprised SOLELY of numbers, commas, and dashes.\n\n"
+    ],
+    "_comment4": "---------------------------",
+
+    "_comment5": "----- INFORMATION & HELP ------",
+    "argparse_description": "O.P.E.N. - Omnicompetent Port Emergence Norm",
+    "argparse_epilog": "T.A.R.S. and O.P.E.N. are projects by Shota Sotiris Oniani / lavendermerchant. © 2025",
+    "argparse_targets_flag_help": "List of IPs to scan. Delimited by commas. No spaces",
+    "argparse_ports_flag_help": "List of all port ranges to scan. Defined by dashes. Delimited by commas. No spaces",
+    "argparse_enable_huge_scans_flag_help": "Used to override the limit for target IPs set at the program level: "
+}
